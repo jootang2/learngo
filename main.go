@@ -18,6 +18,7 @@ func repeatMe(words ...string) {
 
 }
 
+//test
 func main() {
 	repeatMe("jootang", "hwan", "John", "Angel")
 }
