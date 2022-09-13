@@ -9,8 +9,10 @@ func multiply(a, b int) int {
 	return a * b
 }
 
-func lenAndUpper(name string) (int, string) {
-	return len(name), strings.ToUpper(name)
+func lenAndUpper(name string) (lenght int, uppercase string) {
+	lenght = len(name)
+	uppercase = strings.ToUpper(name)
+	return
 }
 
 func repeatMe(words ...string) {
@@ -18,7 +20,8 @@ func repeatMe(words ...string) {
 
 }
 
-//test
+// test
 func main() {
-	repeatMe("jootang", "hwan", "John", "Angel")
+	totalLenght, up := lenAndUpper("joohwan")
+	fmt.Println(totalLenght, up)
 }
