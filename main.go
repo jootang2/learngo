@@ -3,40 +3,47 @@ package main
 import (
 	"errors"
 	"fmt"
-	"time"
+	"net/http"
 )
+
+type requestResult struct {
+	url string
+	status string
+}
 
 var errRequestFailed = errors.New("Request Failed")
 
 func main() {
-	channel := make(chan string)
-	people := [2]string{"juhwan", "mingji"}
-	for _, person := range people {
-		go isHappy(person, channel)
+	results := make(map[string]string)
+	c := make(chan requestResult)
+	urls := []string{"https://www.airbnb.com/",
+		"https://www.google.com/",
+		"https://www.amazon.com/",
+		"https://www.reddit.com/",
+		"https://www.google.com/",
+		"https://soundcloud.com/",
+		"https://www.facebook.com/",
+		"https://www.instagram.com/",
+		"https://academy.nomadcoders.co/",
 	}
-	for i:=0;i < len(people); i++{
-		fmt.Println(<-channel)
+	for _, url := range urls {
+		go hitURL(url, c)
 	}
-}
+	for i:=0;i < len(urls); i ++{
+		result := <- c
+		results[result.url] = result.status
+	}
 
-// func hitURL(url string) error {
-// 	fmt.Println("Checking", url)
-// 	resp, err := http.Get(url)
-// 	if err != nil || resp.StatusCode >= 400 {
-// 		fmt.Println(err, resp.StatusCode)
-// 		return errRequestFailed
-// 	}
-// 	return nil
-// }
-
-func Count(person string) {
-	for i := 0; i < 10; i++ {
-		fmt.Println(person, "this is golang", i)
-		time.Sleep(time.Second)
+	for url, status := range results {
+		fmt.Println(url, status)
 	}
 }
 
-func isHappy(person string, channel chan string) {
-	time.Sleep(time.Second * 5)
-	channel <- person + " is Happy"
+func hitURL(url string, c chan <- requestResult) {
+	resp, err := http.Get(url)
+	status := "OK"
+	if err != nil || resp.StatusCode >= 400 {
+		status = "FAILED"
+	}
+	c <- requestResult{url:url, status: status}
 }
