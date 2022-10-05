@@ -9,14 +9,14 @@ import (
 var errRequestFailed = errors.New("Request Failed")
 
 func main() {
-	channel := make(chan bool)
+	channel := make(chan string)
 	people := [2]string{"juhwan", "mingji"}
 	for _, person := range people {
 		go isHappy(person, channel)
 	}
-	result := <- channel
-	fmt.Println(result)
-
+	for i:=0;i < len(people); i++{
+		fmt.Println(<-channel)
+	}
 }
 
 // func hitURL(url string) error {
@@ -36,7 +36,7 @@ func Count(person string) {
 	}
 }
 
-func isHappy(person string, channel chan bool) {
+func isHappy(person string, channel chan string) {
 	time.Sleep(time.Second * 5)
-	channel <- true
+	channel <- person + " is Happy"
 }
