@@ -1,9 +1,11 @@
 package main
 
 import (
+	"encoding/csv"
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 
 	"github.com/PuerkitoBio/goquery"
@@ -19,19 +21,36 @@ type extractedMonzee struct {
 var baseURL string = "https://monzee.tistory.com/"
 
 func main() {
-	var jobs []extractedMonzee
+	var posts []extractedMonzee
 	totalPages := getPages()
 
 	for i := 1; i <= totalPages; i++ {
-		extractedjobs := getPage(i)
-		jobs = append(jobs, extractedjobs...)
+		extractedPosts := getPage(i)
+		posts = append(posts, extractedPosts...)
 	}
-	fmt.Println(jobs)
-
-
+	writePosts(posts)
 }
 
-func getPage(page int) []extractedMonzee{
+func writePosts(posts []extractedMonzee) {
+	file, err := os.Create("posts.csv")
+	checkErr(err)
+
+	w := csv.NewWriter(file)
+	defer w.Flush()
+
+	headers := []string{"ID", "TITLE", "SUMMARY", "DATE"}
+
+	wErr := w.Write(headers)
+	checkErr(wErr)
+
+	for _, post := range posts {
+		postSlice := []string{"https://monzee.tistory.com" + post.id, post.title, post.summary, post.date}
+		pwErr := w.Write(postSlice)
+		checkErr(pwErr)
+	}
+}
+
+func getPage(page int) []extractedMonzee {
 	var posts []extractedMonzee
 	pageURL := baseURL + "?page=" + strconv.Itoa(page)
 	fmt.Println("Requesting", pageURL)
@@ -55,8 +74,8 @@ func getPage(page int) []extractedMonzee{
 
 }
 
-func extractPost(card *goquery.Selection) extractedMonzee{
-	id, _ := card.Attr("href")
+func extractPost(card *goquery.Selection) extractedMonzee {
+	id, _ := card.Find(".article-content>a").Attr("href")
 	title := card.Find(".title").Text()
 	summary := card.Find(".summary").Text()
 	date := card.Find(".date").Text()
