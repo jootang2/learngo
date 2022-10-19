@@ -22,11 +22,16 @@ var baseURL string = "https://monzee.tistory.com/"
 
 func main() {
 	var posts []extractedMonzee
+	c := make(chan []extractedMonzee)
 	totalPages := getPages()
 
 	for i := 1; i <= totalPages; i++ {
-		extractedPosts := getPage(i)
-		posts = append(posts, extractedPosts...)
+		go getPage(i, c)
+	}
+
+	for i := 0; i < totalPages; i++{
+		extractPosts := <- c
+		posts = append(posts, extractPosts...)
 	}
 	writePosts(posts)
 }
@@ -50,7 +55,7 @@ func writePosts(posts []extractedMonzee) {
 	}
 }
 
-func getPage(page int) []extractedMonzee {
+func getPage(page int, mainC chan<- []extractedMonzee){
 	var posts []extractedMonzee
 	c := make(chan extractedMonzee)
 	pageURL := baseURL + "?page=" + strconv.Itoa(page)
@@ -75,7 +80,7 @@ func getPage(page int) []extractedMonzee {
 		posts = append(posts, post)
 	}
 
-	return posts
+	mainC <- posts
 
 }
 
