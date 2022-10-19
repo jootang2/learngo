@@ -52,6 +52,7 @@ func writePosts(posts []extractedMonzee) {
 
 func getPage(page int) []extractedMonzee {
 	var posts []extractedMonzee
+	c := make(chan extractedMonzee)
 	pageURL := baseURL + "?page=" + strconv.Itoa(page)
 	fmt.Println("Requesting", pageURL)
 	res, err := http.Get(pageURL)
@@ -66,20 +67,24 @@ func getPage(page int) []extractedMonzee {
 	searchCards := doc.Find(".article-content")
 
 	searchCards.Each(func(i int, card *goquery.Selection) {
-		post := extractPost(card)
-		posts = append(posts, post)
+		go extractPost(card, c)
 	})
+
+	for i:=0; i<searchCards.Length(); i++{
+		post := <-c
+		posts = append(posts, post)
+	}
 
 	return posts
 
 }
 
-func extractPost(card *goquery.Selection) extractedMonzee {
+func extractPost(card *goquery.Selection, c chan<- extractedMonzee) {
 	id, _ := card.Find(".article-content>a").Attr("href")
 	title := card.Find(".title").Text()
 	summary := card.Find(".summary").Text()
 	date := card.Find(".date").Text()
-	return extractedMonzee{id: id, title: title, summary: summary, date: date}
+	c <- extractedMonzee{id: id, title: title, summary: summary, date: date}
 }
 
 func getPages() int {
